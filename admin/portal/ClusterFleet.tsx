@@ -1,11 +1,12 @@
 "use client";
+import type { NetworkContext } from "./NetworkContext";
 import { useEffect, useState } from 'react';
 
 type NetworkNote = {name:string;subnet_gateway:string;purpose:string};
 type NetworkSource = {source:string;collected_at:string|null;source_updated_at?:string|null};
 type Observation = {source:string;collected_at:string|null;error?:string;source_updated_at?:string};
 export type ResourceLink = {id:string;name:string;url:string;state:string};
-export type FleetDevice = {resource?:ResourceLink|null;resource_sync?:string;id:string;serial:string;port:string;inventory:Record<string,string>;facts:Record<string,unknown>;status:string;conflict:boolean;stale:boolean;nvme_detected:boolean;nvme_bytes:number;sd_bytes:number;ram_gb:number|null;assigned:boolean;available:boolean;admitted:boolean;observations:Observation[]};
+export type FleetDevice = {network_context?:NetworkContext;resource?:ResourceLink|null;resource_sync?:string;id:string;serial:string;port:string;inventory:Record<string,string>;facts:Record<string,unknown>;status:string;conflict:boolean;stale:boolean;nvme_detected:boolean;nvme_bytes:number;sd_bytes:number;ram_gb:number|null;assigned:boolean;available:boolean;admitted:boolean;observations:Observation[]};
 export function useFleet(endpoint:string) {
   const [devices,setDevices]=useState<FleetDevice[]>([]),[error,setError]=useState('');
   const [networks,setNetworks]=useState<NetworkNote[]>([]),[networkSource,setNetworkSource]=useState<NetworkSource|null>(null);
@@ -20,18 +21,19 @@ export function useFleet(endpoint:string) {
 const capacity=(bytes:number)=>bytes?`${(bytes/1e9).toFixed(1)} GB`:'Unknown';
 export function ClusterFleet({devices,selected,choose}:{devices:FleetDevice[];selected:string;choose:(port:string)=>void}) {
   const [query,setQuery]=useState(''),[ram,setRam]=useState(''),[storage,setStorage]=useState(''),[spare,setSpare]=useState(false),[sd,setSd]=useState('');
-  const filtered=devices.filter(device=>(!query||JSON.stringify([device.serial,device.port,device.inventory]).toLowerCase().includes(query.toLowerCase()))
+  const filtered=devices.filter(device=>(!query||JSON.stringify([device.serial,device.port,device.inventory,device.network_context?.hostname,device.network_context?.addresses]).toLowerCase().includes(query.toLowerCase()))
     &&(!ram||device.ram_gb===Number(ram))&&(!storage||(storage==='nvme'?device.nvme_detected:!device.nvme_detected&&!device.stale&&!!device.observations[1]?.collected_at))
     &&(!spare||device.available)&&(!sd||device.sd_bytes>=Number(sd)*1e9));
   return <section className="sl-fleet" aria-label="Fleet inventory"><header><h2>Fleet</h2><p>Capacity comes from SSH observations. Inventory purpose and detected storage remain separate.</p></header>
-    <div className="sl-filters"><label>Search<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Hostname, serial, workload, port…"/></label>
+    <div className="sl-filters"><label>Search<input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Hostname, IP, serial, workload…"/></label>
       <label>RAM<select value={ram} onChange={e=>setRam(e.target.value)}><option value="">Any capacity</option>{[2,4,8,16,32].map(n=><option key={n}>{n}</option>)}</select></label>
       <label>Storage<select value={storage} onChange={e=>setStorage(e.target.value)}><option value="">All observations</option><option value="nvme">NVMe drive detected</option><option value="sd">No NVMe detected · fresh</option></select></label>
       <label>SD capacity<select value={sd} onChange={e=>setSd(e.target.value)}><option value="">Any capacity</option><option value="30">32 GB class or larger</option><option value="60">64 GB class or larger</option><option value="120">128 GB class or larger</option></select></label>
       <label><input type="checkbox" checked={spare} onChange={e=>setSpare(e.target.checked)}/>Available spares</label></div>
     <p>{filtered.length} devices · nominal RAM class estimated from observed usable memory</p>
-    <div className="sl-table-scroll"><table><thead><tr><th>Device / identity</th><th>Purpose</th><th>RAM / SD</th><th>NVMe</th><th>Evidence</th></tr></thead><tbody>{filtered.map(device=><tr key={device.id} aria-selected={selected===device.port}>
+    <div className="sl-table-scroll"><table><thead><tr><th>Device / identity</th><th>Host / local IP</th><th>Purpose</th><th>RAM / SD</th><th>NVMe</th><th>Evidence</th></tr></thead><tbody>{filtered.map(device=><tr key={device.id} aria-selected={selected===device.port}>
       <td><button onClick={()=>choose(device.port)}>{device.inventory.title} · {device.port}</button><br/><code>{device.serial||'Serial unknown'}</code>{device.resource&&<p><a className="sl-resource-link" href={device.resource.url}>Open resource · notes &amp; tasks</a></p>}{device.resource_sync&&<small>{device.resource_sync}</small>}</td>
+      <td>{device.network_context?.hostname || device.inventory.hostname || 'Hostname unknown'}<br/>{device.network_context?.addresses.filter(row=>row.scope==='local').length ? device.network_context.addresses.filter(row=>row.scope==='local').map(row=><div key={row.interface+row.address}><code>{row.address}</code><br/><small>{row.interface} · {device.network_context?.stale ? 'stale' : 'observed'}</small></div>) : <><code>{device.inventory.internal_ip || 'IP unknown'}</code><br/><small>{device.inventory.internal_ip ? 'Documented · unverified' : 'Not observed'}</small></>}{device.network_context?.address_conflict && <p className="sl-warning">Address conflict</p>}</td>
       <td>{device.inventory.role||'Purpose unconfirmed'}<br/>{device.assigned?'Active assignment':device.available?'Available spare':'Availability unconfirmed'}</td>
       <td>{device.ram_gb?`${device.ram_gb} GB`:'Unknown'} / {capacity(device.sd_bytes)}</td>
       <td>{device.nvme_detected?`Drive detected · ${capacity(device.nvme_bytes)}`:device.facts.storage?'No drive detected':'Not observed'}<br/>{device.facts.nvme_hat?`HAT: ${String(device.facts.nvme_hat)}`:'HAT not reported'}</td>

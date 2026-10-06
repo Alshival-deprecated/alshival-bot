@@ -1,12 +1,13 @@
 "use client";
 
+import { DeviceNetwork, type NetworkContext } from "./NetworkContext";
 import { ClusterFleet, ClusterNetwork, useFleet, type ResourceLink } from "./ClusterFleet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Cable, CheckCircle2, ChevronRight, Clock3, LockKeyhole, Power, RefreshCw, RotateCw, ShieldCheck, Zap } from "lucide-react";
 
 type Device = { label: string; workload: string; expected_mac: string; quality: string; locked: boolean };
 type Port = { port: string; vlan: number; mode: string; link: string; protected: string };
-type Inspection = { resources?: ResourceLink[]; port: string; link: string; access_vlan: number | null; macs: string[]; poe_enabled: boolean | null;
+type Inspection = { network_context?: NetworkContext; resources?: ResourceLink[]; port: string; link: string; access_vlan: number | null; macs: string[]; poe_enabled: boolean | null;
   poe_status: string | null; watts: number | null; volts: number | null; amps: number | null; fault: string | null;
   collected_at: string; stale?: boolean; refresh_error?: string; refreshing?: boolean; device: Device; protected: string; evidence: Record<string, string> };
 type Operation = { id: string; port: string; action: string; state: string; actor: string; source: string; created_at: string;
@@ -114,6 +115,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
 
   const stale = !snapshot?.collected_at || snapshot.stale || now - Date.parse(snapshot.collected_at) > 900000;
   const selectedStale = !inspection?.collected_at || inspection.stale || now - Date.parse(inspection.collected_at) > 900000;
+  const selectedDevices = devices.filter(device => device.port === selected);
   const running = snapshot?.operations.some(j => active(j.state));
   const protectedPort = inspection?.protected || snapshot?.ports.find(p => p.port === selected)?.protected;
   const disabled = busy || !!running || !!protectedPort || !!inspection?.device.locked || stale || selectedStale || !!error;
@@ -121,12 +123,12 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
   return <main className="sl-app">
     <header className="sl-header">
       <div><p className="sl-eyebrow">INFRASTRUCTURE / ARUBA</p><h1>Switch Manager <span className={stale || error ? "sl-badge sl-warning" : "sl-badge"}>{stale || error ? "Unavailable / stale" : "Cached readings"}</span></h1>
-        <p>52 ports. One place to inspect, understand, and control power.</p></div>
+        <p>Cluster inventory, network context, and port control.</p></div>
       <span className="sl-badge">Automatic refresh · 15 minutes</span>
     </header>
     {snapshot?.resources?.length ? <nav aria-label="Infrastructure resources">{snapshot.resources.map(resource=><a key={resource.id} className="sl-resource-link" href={resource.url}>{resource.name}</a>)}</nav> : null}
     {(error || snapshot?.refresh_error) && <div role="alert" className="sl-alert">{error || snapshot?.refresh_error} Last successful readings are retained. Use Refresh port to retry.</div>}
-    <div className="sl-status"><span><ShieldCheck size={16}/> Server-side control · 192.168.40.2</span><span>Manager .41.106 / VLAN 41</span><span>{snapshot ? `Observed ${date(snapshot.collected_at)}` : "Connecting…"}</span></div>
+    <div className="sl-status"><span><ShieldCheck size={16}/> Switch · {snapshot?.host || "Not observed"}</span><span>{snapshot?.ports.length ?? "—"} ports · {devices.length} recorded devices</span><span>{snapshot ? `Observed ${date(snapshot.collected_at)}` : "Connecting…"}</span></div>
     <nav className="sl-filters" aria-label="Infrastructure views">{['rack','fleet','network','activity'].map(item=><button key={item} aria-pressed={view===item} onClick={()=>{setView(item);const url=new URL(location.href);url.searchParams.set('view',item);history.pushState({},'',url);}}>{item[0].toUpperCase()+item.slice(1)}</button>)}</nav>
     {fleetError&&<p role="status" className="sl-warning">{fleetError}</p>}
     <div className="sl-layout">
@@ -135,9 +137,9 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
         <div className="sl-rack-title"><div><p className="sl-eyebrow">ARUBA 6200F</p><h2>The physical switch</h2></div><Cable size={28}/></div>
         <div className="sl-port-grid">{(snapshot?.ports || []).map(p => <button key={p.port} aria-label={`Port ${p.port}, ${p.link}, VLAN ${p.vlan}${p.protected ? ", protected" : ""}`} aria-pressed={selected === p.port}
           className={`sl-port ${p.link === "up" ? "sl-up" : ""} ${selected === p.port ? "sl-selected" : ""}`} onClick={() => choose(p.port)}>
-          <span className="sl-port-jack"><i/><i/><i/><i/></span><strong>{p.port.split("/")[2]}</strong><small>{p.mode === "access" ? `V${p.vlan}` : "TRUNK"}</small>
+          <span className="sl-port-jack"><i/><i/><i/><i/></span><strong>{p.port.split("/")[2]}</strong><small>{p.mode === "access" ? `V${p.vlan}` : "TRUNK"}</small><small>{p.link === "up" ? "Up" : p.link === "down" ? "Down" : "Unknown"}</small>
           {p.protected && <LockKeyhole size={11} className="sl-lock"/>}</button>)}</div>
-        <div className="sl-legend"><span><i/> Link up</span><span>Dark jack · link down</span><span><LockKeyhole size={12}/> Protected</span></div>
+        <div className="sl-legend"><span><i/> Link up</span><span>Up / Down · observed link</span><span><LockKeyhole size={12}/> Protected</span></div>
         <div className="sl-boundary"><ShieldCheck size={20}/><div><strong>Single port operations</strong><p>Management host 13, provisioning host 48, router uplink 1 and SFP ports are protected. VLAN and provisioning changes remain outside live power control.</p></div></div>
       </section>}
       <aside className="sl-inspector" aria-label="Port inspector">
@@ -147,10 +149,11 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
         {inspection ? <>
           <p className="sl-hint">Cached switch readings · refreshed every 15 minutes</p>
           {inspection.refresh_error && <p role="status" className="sl-warning">{inspection.refresh_error}</p>}
-          <h3>{inspection.device.label}</h3><p>{inspection.device.workload}</p>
+          <p className="sl-eyebrow">IDENTITY</p><h3>{inspection.device.label}</h3><p>{inspection.device.workload}</p>
           <div className={`sl-identity ${inspection.device.quality !== "verified" ? "sl-warning" : ""}`}><strong>Identity: {inspection.device.quality}{selectedStale ? " · observation stale" : ""}</strong>
             <p>{inspection.device.quality === "verified" ? "Learned MAC matches recorded inventory." : "Attached device or workload is unconfirmed. Review the physical port before removing power."}</p></div>
-          <dl><div><dt>Access VLAN</dt><dd>{inspection.access_vlan ?? "Trunk / unavailable"}</dd></div>
+          {selectedDevices.length > 1 ? <p className="sl-warning">Multiple inventory records reference this port. Verify attachment before using host details.</p> : <DeviceNetwork context={selectedDevices[0]?.network_context || inspection.network_context}/>}
+          <h3>Power &amp; switch link</h3><dl><div><dt>Access VLAN</dt><dd>{inspection.access_vlan ?? "Trunk / unavailable"}</dd></div>
             <div><dt>PoE</dt><dd>{inspection.poe_enabled === null ? "Not supported" : inspection.poe_enabled ? "Enabled" : "Disabled"} · {inspection.poe_status || "—"}</dd></div>
             <div><dt>Actual power</dt><dd>{inspection.watts ?? "—"} W</dd></div><div><dt>Voltage / current</dt><dd>{inspection.volts ?? "—"} V / {inspection.amps ?? "—"} A</dd></div>
             <div><dt>Fault</dt><dd>{inspection.fault || "—"}</dd></div><div><dt>Learned MACs</dt><dd>{inspection.macs.length ? inspection.macs.map(m => <code key={m}>{m}<br/></code>) : "None observed"}</dd></div>

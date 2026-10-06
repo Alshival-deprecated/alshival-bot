@@ -6,7 +6,7 @@ import css from "../app/(admin)/infrastructure/switch-manager/switch-manager.css
 
 import appearance from "../app/(admin)/infrastructure/switch-manager/appearance.css";
 
-// Shadow DOM keeps the portal theme and command-center styles independent.
+// Shadow DOM scopes layout rules; shared portal color tokens inherit through the host.
 const host = document.getElementById("switch-manager-root");
 if (host) {
   const shadow = host.attachShadow({ mode: "open" });
@@ -14,9 +14,7 @@ if (host) {
   style.textContent = `:host { display:block; min-width:0; }
     *, *::before, *::after { box-sizing:border-box; }
     button,input,select,textarea { font:inherit; }
-    ${css}
-    ${appearance}
-    ${liveCss}
+    ${host.dataset.liveControl ? liveCss : css + appearance}
     .sm-ops-dock, .sm-operations { left:var(--switch-portal-offset, 0px) !important; }
   `;
   const mount = document.createElement("div");
