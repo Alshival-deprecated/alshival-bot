@@ -1,5 +1,7 @@
 import { createRoot } from "react-dom/client";
 import SwitchManager from "../app/(admin)/infrastructure/switch-manager/SwitchManager";
+import LiveSwitchManager from "./LiveSwitchManager";
+import liveCss from "./live-switch-manager.css";
 import css from "../app/(admin)/infrastructure/switch-manager/switch-manager.css";
 
 import appearance from "../app/(admin)/infrastructure/switch-manager/appearance.css";
@@ -14,6 +16,7 @@ if (host) {
     button,input,select,textarea { font:inherit; }
     ${css}
     ${appearance}
+    ${liveCss}
     .sm-ops-dock, .sm-operations { left:var(--switch-portal-offset, 0px) !important; }
   `;
   const mount = document.createElement("div");
@@ -29,5 +32,7 @@ if (host) {
     attributes: true, attributeFilter: ["class"],
   });
   shadow.append(style, mount);
-  createRoot(mount).render(<SwitchManager initialTimestamp={new Date().toISOString()} />);
+  createRoot(mount).render(host.dataset.liveControl
+    ? <LiveSwitchManager endpoint={host.dataset.liveControl} csrf={host.dataset.csrf || ""} />
+    : <SwitchManager initialTimestamp={new Date().toISOString()} />);
 }

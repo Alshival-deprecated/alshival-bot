@@ -650,3 +650,13 @@ including Light/Dark/System preference changes, without remounting the workspace
 the original graphite palette remains the dark default in standalone Next.js.
 Run `admin/tests/switch-manager-theme.browser.mjs` against a local portal fixture
 to check every view, the tray, saved/system preferences, and mobile layouts.
+
+
+### Live Aruba PoE controls
+
+The authenticated Alshival portal now mounts `admin/portal/LiveSwitchManager.tsx`
+when its root provides `data-live-control` and a CSRF token. It uses the
+administrator-only Django control endpoint; SSH credentials remain on pi13.
+The live inspector and Operations Tray support reviewed, single-port off/on/cycle
+with durable backend audit and restoration. The standalone Next.js fixture is
+unchanged. Operational procedure and tests: website `docs/switch-manager-live.md`.
