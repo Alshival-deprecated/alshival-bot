@@ -528,3 +528,118 @@ Full stack:
 ```bash
 ./start.sh
 ```
+
+## Switch Manager prototype
+
+Open **Infrastructure → Switch Manager** at `/infrastructure/switch-manager` in the
+existing Next.js admin app. This is explicitly **Demo data**: it uses no hardware,
+SSH, API credentials, DHCP writes, disk imaging, 1Password writes, or live MCP
+execution. Deployment and live integration are separate follow-up work.
+
+The Rack, Network, Fleet, Provisioning and Activity views share selection through
+`view`, `port`, `device`, `detail` and `job` URL parameters. Demo plans, observations,
+jobs, inventory and provisioning progress are retained in this browser's
+`alshival-switch-manager-demo-v1` localStorage entry. Reset clears only this demo
+state. Browser storage is optional; blocked storage leaves an in-memory demo.
+Jobs progress only while the page is open and resume on reopening it.
+
+### Walkthrough
+
+- Port **1/1/16** is the completed Pi 5 / 8 GB / VLAN 41 / 192.168.41.116 example:
+  nominal 64 GB SD, no NVMe detected.
+- Fleet's **16 GB spares with NVMe** shortcut selects pi-spare-12. **HAT only**
+  includes pi-spare-08 and pi-new-17; a HAT never implies a detected drive.
+- Rack's attention rows show conflicting historical storage on port 8, an
+  unreachable collector with old evidence on port 24, and a swapped MAC on port 40.
+- **Provision a Pi** starts the second scenario on port 17. Check .41.117 to see
+  its conflicting reservation; try .41.118, optionally simulate a collector outage,
+  then run complete checks. Generate/download the SD handoff, simulate physical
+  installation, retry the package-mirror error, and finish by marking the board
+  available. The handoff includes a fixture public key (no private key retained),
+  fixture image checksum, cloud-init/network settings and target-card requirements.
+  It is a demonstration artifact, not a usable production imaging authorization.
+- The inspector previews VLAN moves and PoE cycles. Rack's **Draft with Alshival**
+  uses the same plan/execute/check/activity path. Review plans in Operations before
+  running them; click activity job links to inspect verification evidence.
+
+### Adapter and future MCP contracts
+
+`admin/lib/switch-manager/engine.ts` defines switches, ports, devices, networks,
+allocations, observations, plans, jobs and events behind `OperationsAdapter`.
+Board identity is serial/MAC; attachment is a separate port reference. Proposed
+plans capture identity; execution revalidates identity, current collector evidence,
+address evidence and unfinished work. Duplicate execution returns the existing
+job. Human and Alshival are simulated actors under the same demo scope and rules.
+No browser actor choice is an authorization mechanism for a future live adapter.
+
+| Future MCP group | Adapter boundary | Required live behavior |
+| --- | --- | --- |
+| Inspect | `inspect`, `getSnapshot`, address observations | Scope-filtered switch/device/port/network/power/address/health reads with source, collection time and explicit unavailable evidence. |
+| Plan | `propose`, `checkAddress`, `handoff` | Validate intended board attachment, address ownership, network policy and impact; return a stable plan ID and imaging handoff. |
+| Execute | `execute` | Validate server-side delegated admin capabilities and plan revision/scope; return a job ID, use idempotency and reserve addresses atomically. |
+| Follow | `follow`, subscriptions and activity | Persist progress/evidence, support safe retry, expose actor and affected board/port; never treat historical evidence as a fresh observation. |
+
+Future adapters: Aruba supplies port/MAC/PoE observations; OPNsense owns network
+policy and routing; pi-admin supplies provisioning DHCP; Pi agents/SSH supply
+host checks; 1Password stores documentation and credential references. Secrets
+remain server-side. New client VLANs need a network-design workflow. Disk erasure
+belongs to the local imaging agent and requires an explicitly identified target
+and matching authorization; the Switch Manager plan alone cannot authorize it.
+
+The demo's candidate checks and image signatures are simulated. A production
+implementation must replace them with authoritative observations, signed image
+manifests, trusted SSH host enrollment, transactional allocations, server-side
+scope validation, durable workers and real evidence. No network safety guarantee
+is inferred from ping silence.
+
+### Isolated checks
+
+Use a clean source worktree without runtime databases or environment files. From
+`admin/`, use Node 24 and the installed package lock:
+
+```bash
+npm ci
+node --test tests/switch-manager.test.mjs
+npx eslint 'app/(admin)/infrastructure/switch-manager/' app/components/AdminShell.tsx lib/switch-manager/engine.ts tests/switch-manager*.mjs
+npx tsc --noEmit
+npm run build -- --webpack
+npm run dev -- --webpack --hostname 127.0.0.1 --port 18786
+```
+
+The isolated preview uses webpack when node_modules is linked outside the worktree
+(Turbopack rejects that symlink). No production configuration was changed for this.
+The browser acceptance script uses Playwright when installed by the local test
+harness; `PLAYWRIGHT_MODULE` may point to its `index.mjs`, and
+`PLAYWRIGHT_EXECUTABLE` may select the installed Chromium binary:
+
+```bash
+node tests/switch-manager.browser.mjs
+```
+
+It checks 52 keyboard-selectable ports, fleet storage distinctions, disagreement
+and outage cases, topology/table parity, human/agent jobs, provisioning conflict
+and retry, reload persistence, mobile detail URLs, reduced motion and reset.
+`SWITCH_DEMO_URL` accepts only localhost; screenshots go to
+`/tmp/switch-manager-artifacts` or `SWITCH_ARTIFACTS`.
+
+### Alshival.Ai portal bundle
+
+The portal mounts this same fixture workspace behind its administrator capability
+at `/staff/infrastructure/switch-manager/`. It does not proxy the bot's settings,
+API routes, or hardware tools. The portal shell owns authentication/navigation;
+a shadow root isolates the workspace CSS. URL selection and browser history use
+native location events in both hosts.
+
+To rebuild the portable artifact from this repository's committed source:
+
+```bash
+cd admin
+npm ci
+node portal/build.mjs /path/to/website/customer_hub/static/customer_hub/switch-manager.js
+```
+
+Commit the generated JS and its linked license file in the website repository,
+record this source commit in `docs/switch-manager.md`, and increment the script
+version in the portal template. The normal website release deploys the bundle;
+no bot service restart is needed. Only browser-local fixtures are persisted.
+The browser acceptance script supports `SWITCH_DEMO_PATH` for the portal route.

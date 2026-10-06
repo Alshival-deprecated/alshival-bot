@@ -1,14 +1,35 @@
 "use client";
 
 import Image from "next/image";
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bot, CheckCircle2, ChevronRight, ListChecks, MessageSquare, Plug, Settings, Wrench } from "lucide-react";
+import {
+  Bot,
+  CheckCircle2,
+  ChevronRight,
+  ListChecks,
+  MessageSquare,
+  Plug,
+  Settings,
+  Wrench,
+  Network,
+  Menu,
+} from "lucide-react";
 import logo from "../../logo.png";
 
-export default function AdminShell({ children }: { children: React.ReactNode }) {
+export default function AdminShell({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const pathname = usePathname();
-  const isGeneralRoute = pathname === "/general" || pathname.startsWith("/language-models");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isInfrastructureRoute = pathname.startsWith(
+    "/infrastructure/switch-manager",
+  );
+  const isGeneralRoute =
+    pathname === "/general" || pathname.startsWith("/language-models");
   const isAgentRoute = pathname.startsWith("/general/agent");
   const isDiscordRoute = pathname.startsWith("/platforms/discord");
   const isGithubRoute = pathname.startsWith("/platforms/github");
@@ -16,17 +37,40 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
   const isAsanaRoute = pathname.startsWith("/platforms/asana");
 
   return (
-    <main className="admin-shell">
-      <aside className="sidebar" aria-label="Admin navigation">
+    <main
+      className={`admin-shell ${isInfrastructureRoute ? "switch-manager-shell" : ""}`}
+    >
+      <aside
+        className={`sidebar ${mobileNavOpen ? "sm-mobile-menu-open" : ""}`}
+        aria-label="Admin navigation"
+      >
         <div className="brand">
-          <Image src={logo} alt="Alshival logo" width={42} height={42} priority />
+          <Image
+            src={logo}
+            alt="Alshival logo"
+            width={42}
+            height={42}
+            priority
+          />
           <div>
             <p className="brand-kicker">Admin</p>
             <h1>Alshival</h1>
           </div>
         </div>
 
-        <nav className="nav">
+        {isInfrastructureRoute && (
+          <button
+            type="button"
+            className="sm-shell-menu"
+            aria-expanded={mobileNavOpen}
+            aria-controls="admin-primary-nav"
+            onClick={() => setMobileNavOpen(!mobileNavOpen)}
+          >
+            <Menu size={17} />
+            Menu
+          </button>
+        )}
+        <nav className="nav" id="admin-primary-nav">
           <Link
             className={`nav-item ${isGeneralRoute ? "selected" : ""}`}
             href="/general"
@@ -36,7 +80,10 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
             <ChevronRight size={15} />
           </Link>
           {isGeneralRoute ? (
-            <div className="nav-subgroup top-level-subgroup" aria-label="General navigation">
+            <div
+              className="nav-subgroup top-level-subgroup"
+              aria-label="General navigation"
+            >
               <Link
                 className={`nav-subitem ${pathname === "/general" ? "active" : ""}`}
                 href="/general"
@@ -67,6 +114,20 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
           </Link>
           <div className="nav-group">
             <div className="nav-label">
+              <Network size={16} />
+              <span>Infrastructure</span>
+            </div>
+            <Link
+              className={`nav-item nested ${isInfrastructureRoute ? "selected" : ""}`}
+              href="/infrastructure/switch-manager"
+              aria-current={isInfrastructureRoute ? "page" : undefined}
+            >
+              <Network size={17} />
+              <span>Switch Manager</span>
+            </Link>
+          </div>
+          <div className="nav-group">
+            <div className="nav-label">
               <Plug size={16} />
               <span>Platforms</span>
             </div>
@@ -82,7 +143,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div className="nav-subgroup" aria-label="Discord navigation">
                 <Link
                   className={`nav-subitem ${
-                    pathname === "/platforms/discord/global-settings" ? "active" : ""
+                    pathname === "/platforms/discord/global-settings"
+                      ? "active"
+                      : ""
                   }`}
                   href="/platforms/discord/global-settings"
                 >
@@ -110,7 +173,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div className="nav-subgroup" aria-label="Slack navigation">
                 <Link
                   className={`nav-subitem ${
-                    pathname === "/platforms/slack/global-settings" ? "active" : ""
+                    pathname === "/platforms/slack/global-settings"
+                      ? "active"
+                      : ""
                   }`}
                   href="/platforms/slack/global-settings"
                 >
@@ -138,7 +203,13 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               className={`nav-item nested ${isGithubRoute ? "selected" : ""}`}
               href="/platforms/github/global-settings"
             >
-              <Image alt="" className="nav-icon" height={17} src="/github.svg" width={17} />
+              <Image
+                alt=""
+                className="nav-icon"
+                height={17}
+                src="/github.svg"
+                width={17}
+              />
               <span>GitHub</span>
               <ChevronRight size={15} />
             </Link>
@@ -146,7 +217,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div className="nav-subgroup" aria-label="GitHub navigation">
                 <Link
                   className={`nav-subitem ${
-                    pathname === "/platforms/github/global-settings" ? "active" : ""
+                    pathname === "/platforms/github/global-settings"
+                      ? "active"
+                      : ""
                   }`}
                   href="/platforms/github/global-settings"
                 >
@@ -166,7 +239,9 @@ export default function AdminShell({ children }: { children: React.ReactNode }) 
               <div className="nav-subgroup" aria-label="Asana navigation">
                 <Link
                   className={`nav-subitem ${
-                    pathname === "/platforms/asana/global-settings" ? "active" : ""
+                    pathname === "/platforms/asana/global-settings"
+                      ? "active"
+                      : ""
                   }`}
                   href="/platforms/asana/global-settings"
                 >
