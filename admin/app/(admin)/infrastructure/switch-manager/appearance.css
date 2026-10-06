@@ -1,0 +1,527 @@
+/* The host supplies the resolved appearance; no separate theme preference.
+   Hardware keeps its graphite finish in both themes. UI panels use paper/teal. */
+.switch-manager-shell { color-scheme: dark; }
+.switch-manager-shell[data-sm-theme="light"] {
+  color-scheme: light;
+  --background: #f4f6f5;
+  --surface: #ffffff;
+  --surface-muted: #e9efed;
+  --ink: #20343b;
+  --muted: #546970;
+  --line: #cddbd7;
+  --accent: #14685f;
+  --accent-soft: #dceee8;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app {
+  --sm-cyan: #14685f;
+  --sm-amber: #855710;
+  background: radial-gradient(ellipse at 55% 0%, #dcece580, transparent 52%), #f4f6f5;
+  color: var(--ink);
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app small,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app label,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-breadcrumb,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-eyebrow,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-subtitle,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-metrics > div > span,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-local,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-section-head > .sm-mono,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-overlays > span,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-legend,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-caption,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector-identity > p:last-child,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector-section p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector-section > small,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector dt,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-search svg,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-table caption,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-wizard > p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-event-meta,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-timeline p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-empty,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-boundary p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-preview p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-job > p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-plan p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-ops-dock > span,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-ops-dock > button > span {
+  color: #526970;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-breadcrumb strong,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector dd,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-details summary,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-attention-row,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-event-meta strong,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-operations-content > div > h3 {
+  color: #29444c;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-eyebrow > span {
+  color: #637b80;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app button:focus-visible,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app a:focus-visible,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app input:focus-visible,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app select:focus-visible,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app textarea:focus-visible,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app summary:focus-visible,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app svg g:focus-visible {
+  outline-color: #086f69;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app input,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app select,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app textarea,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app select option {
+  background: #ffffff;
+  color: #263d45;
+  border-color: #9fafac;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app input::placeholder,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-app textarea::placeholder {
+  color: #687b81;
+  opacity: 1;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-button,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-top-actions .sm-button,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-close-detail {
+  background: #e5ece9;
+  border-color: #b6c9c1;
+  color: #294b48;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-button:hover:not(:disabled) {
+  background: #d7e6df;
+  border-color: #6a9184;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-button.primary {
+  background: #17685f;
+  border-color: #17685f;
+  color: #ffffff;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-button.primary:hover:not(:disabled) {
+  background: #10554e;
+  border-color: #10554e;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-demo {
+  background: #faf0da;
+  border-color: #dac39a;
+  color: #73521e;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-demo > span {
+  background: #936717;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-topbar,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-tabs,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-metrics > div,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector-identity,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector-section,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-attention-row,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card footer,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-wizard-footer,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-checklist li {
+  border-color: #ccdad5;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-metrics,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-card,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-plan,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-job {
+  background: #ffffff;
+  border-color: #c9d9d2;
+  box-shadow: 0 3px 12px #203c3210;
+  color: #263e46;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-meter,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-job progress,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-job progress::-webkit-progress-bar {
+  background: #d5e2dc;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-meter i,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-job progress::-webkit-progress-value {
+  background: #258475;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-job progress,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-checkbox input {
+  accent-color: #17685f;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-tabs > button {
+  color: #536b72;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-tabs > button.active {
+  color: #14685f;
+  border-bottom-color: #14685f;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-tabs > button:hover {
+  color: #173f3b;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-tabs > button small,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-count {
+  background: #dce8e2;
+  color: #345b50;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-overlays button,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-network-pills button {
+  background: #e8eeeb;
+  color: #49616a;
+  border-color: #c7d7cf;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-overlays button[aria-pressed="true"],
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-network-pills button[aria-pressed="true"] {
+  background: #d8eae1;
+  color: #165f51;
+  border-color: #759c8c;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-rack-stage {
+  background: radial-gradient(ellipse at 50% 0%, #f8fcf9, transparent 75%), #e1e9e5;
+  border-color: #bfcec6;
+  box-shadow: inset 0 1px 0 #ffffff;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-rack-label {
+  color: #29454b;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-rack-label > span:not(.sm-led) {
+  color: #516b70;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-rack-shadow {
+  background: #bdcbc5;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-legend i {
+  background: #63747b;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-legend .ready {
+  background: #268068;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-legend .warning {
+  background: #a57120;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-legend .selected {
+  background: #2b8c7d;
+  box-shadow: 0 0 0 2px #b9d6cc;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-agent-card {
+  background: radial-gradient(ellipse at 80% 0%, #d2e8de, transparent 75%), #eef6f1;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-agent-orb {
+  background: #d8eae2;
+  border-color: #99baab;
+  color: #1d7261;
+  box-shadow: 0 0 32px #79bda329;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-agent-card > p:not(.sm-eyebrow) {
+  color: #456e67;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-inspector {
+  scrollbar-color: #99b0a6 transparent;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-status {
+  background: #e9efec;
+  border-color: #adbfba;
+  color: #405d65;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-status.good {
+  background: #e0f1e6;
+  border-color: #9cc4ab;
+  color: #276346;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-status.warn {
+  background: #fff0d7;
+  border-color: #d9bb82;
+  color: #83560e;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-amber {
+  color: #855710 !important;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-evidence,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-details,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-mini-event {
+  border-color: #b1c7bf;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-text-button,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card footer strong,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-boundary > svg {
+  color: #176a5c;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card:hover,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card.selected {
+  background: #eaf4ef;
+  border-color: #639a87;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-icon {
+  color: #3c7c68;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card > .sm-mono,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card p,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-device-card footer {
+  color: #4a6b71;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-table-wrap {
+  border-color: #c6d6ce;
+  background: #ffffff;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-table th {
+  background: #e8f0eb;
+  color: #3c6260;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-table td {
+  border-color: #d5e0db;
+  color: #29464d;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-topology {
+  background: #eef4f0;
+  border-color: #c5d7ce;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-path {
+  stroke: #688f86;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-node rect {
+  fill: #ffffff;
+  stroke: #8ca89e;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-node.main rect {
+  fill: #d5e9e0;
+  stroke: #3d7d69;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-node text {
+  fill: #234c48;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-node text.sm-net-sub {
+  fill: #52736f;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-node.interactive:hover rect,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-node.selected rect {
+  fill: #cce6da;
+  stroke: #176c59;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-boundary {
+  fill: #cce3d64d;
+  stroke: #7b9f90;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-net-boundary-label {
+  fill: #3b7161;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-provision-summary {
+  background: #e5f0ea;
+  border-color: #b5cfc0;
+  color: #2f524c;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-provision-summary code {
+  color: #1b6a56;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-stepper {
+  background: #edf3ef;
+  border-color: #c8d9cf;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-stepper li {
+  color: #556e74;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-stepper li > span {
+  background: #ffffff;
+  border-color: #aebfb7;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-stepper li.active {
+  color: #175f50;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-stepper li.active > span {
+  background: #17685f;
+  border-color: #17685f;
+  color: #ffffff;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-stepper li.done {
+  color: #35705a;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-stepper li.done > span {
+  background: #d5eadd;
+  color: #28634b;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-callout {
+  background: #eef2e4;
+  border-color: #bdc9a4;
+  color: #4a6035;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-callout p {
+  color: #4b6243;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-purpose-grid > button {
+  background: #ffffff;
+  color: #3d5e63;
+  border-color: #c0d1c7;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-purpose-grid > button.selected {
+  background: #e0efe6;
+  border-color: #689b83;
+  color: #245f4b;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-address-evidence {
+  background: #fff4df;
+  border-color: #d8c091;
+  color: #78591f;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-address-evidence.candidate,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-image-manifest {
+  background: #e8f3e9;
+  border-color: #acccb3;
+  color: #315e43;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-image-manifest code {
+  color: #47745a;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-finish-icon {
+  background: #dcefe2;
+  border-color: #91bfa1;
+  color: #267044;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-connection {
+  background: #e1efe5;
+  border-color: #b4cdbb;
+  color: #21543b;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-connection > span {
+  color: #49765a;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-preview {
+  background: #eaf1ed;
+  border-color: #bfd3c6;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-timeline article:before {
+  background: #c9dbd1;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-event-icon {
+  background: #e7efec;
+  border-color: #acc6b8;
+  color: #496e61;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-event-icon.agent {
+  background: #d9eae0;
+  border-color: #8eb4a1;
+  color: #286b50;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-ops-dock {
+  background: #e9f0edfa;
+  border-color: #b6ccc0;
+  box-shadow: 0 -4px 20px #2644350d;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-ops-dock > button {
+  color: #294f4a;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-ops-dock > button > svg:first-child,
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-checklist li > span:first-child {
+  color: #2d7761;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-operations {
+  background: #f0f5f2;
+  border-color: #9dbdac;
+  box-shadow: 0 -16px 50px #22443424;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-notice {
+  background: #e3f1e6;
+  border-color: #9bbea5;
+  color: #2d5f40;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-error {
+  background: #fff0d9;
+  border-color: #d2b57e;
+  color: #7b551b;
+}
+
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-loading {
+  background: #f4f6f5;
+  color: #2e6a59;
+}
+
+/* Hardware labels remain legible against the same dark chassis in either mode. */
+.sm-port:not(.selected) { color: #a2b3bc; }
+.sm-port-bank > span,
+.sm-switch-footer > div:first-child > span,
+.sm-switch-footer small { color: #9bafb9; }
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-led {
+  background: #268269;
+  box-shadow: none;
+}
+:where(.switch-manager-shell[data-sm-theme="light"]) .sm-topology pattern circle {
+  fill: #b6cfc3;
+}

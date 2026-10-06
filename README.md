@@ -643,3 +643,10 @@ record this source commit in `docs/switch-manager.md`, and increment the script
 version in the portal template. The normal website release deploys the bundle;
 no bot service restart is needed. Only browser-local fixtures are persisted.
 The browser acceptance script supports `SWITCH_DEMO_PATH` for the portal route.
+
+The portal bundle follows the host's resolved `html.dark-style` appearance,
+including Light/Dark/System preference changes, without remounting the workspace.
+`appearance.css` supplies the light palette and shared hardware-label contrast;
+the original graphite palette remains the dark default in standalone Next.js.
+Run `admin/tests/switch-manager-theme.browser.mjs` against a local portal fixture
+to check every view, the tray, saved/system preferences, and mobile layouts.

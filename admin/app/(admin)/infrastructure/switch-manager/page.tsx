@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import SwitchManager from "./SwitchManager";
 import "./switch-manager.css";
+import "./appearance.css";
 
 export const dynamic = "force-dynamic";
 
