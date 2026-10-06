@@ -8,13 +8,13 @@ type Device = { label: string; workload: string; expected_mac: string; quality: 
 type Port = { port: string; vlan: number; mode: string; link: string; protected: string };
 type Inspection = { port: string; link: string; access_vlan: number | null; macs: string[]; poe_enabled: boolean | null;
   poe_status: string | null; watts: number | null; volts: number | null; amps: number | null; fault: string | null;
-  collected_at: string; device: Device; protected: string; evidence: Record<string, string> };
+  collected_at: string; stale?: boolean; refresh_error?: string; refreshing?: boolean; device: Device; protected: string; evidence: Record<string, string> };
 type Operation = { id: string; port: string; action: string; state: string; actor: string; source: string; created_at: string;
   preview: { device: Device; macs: string[]; access_vlan: number | null; interruption: string; collected_at: string };
   result: string; evidence: { stage: string; at: string; port?: Inspection; message: string }[] };
-type Snapshot = { host: string; collected_at: string; ports: Port[]; operations: Operation[] };
+type Snapshot = { stale?: boolean; refresh_error?: string; host: string; collected_at: string; ports: Port[]; operations: Operation[] };
 
-const date = (v: string) => new Date(v).toLocaleTimeString();
+const date = (v: string) => v ? new Date(v).toLocaleTimeString() : "Not collected";
 const active = (s: string) => ["queued", "running", "recovery"].includes(s);
 
 export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string; csrf: string }) {
@@ -49,12 +49,12 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     if (mounted.current) { setSnapshot(data); }
   }, [api]);
 
-  const inspect = useCallback(async (port: string) => {
+  const inspect = useCallback(async (port: string, force = false) => {
     const ticket = ++sequence.current;
-    setInspection(null); setPreview(null); setAccepted(false);
+    if (!force) setInspection(null); setPreview(null); setAccepted(false);
     try {
-      const data = await api<Inspection>(port);
-      if (mounted.current && ticket === sequence.current) { setInspection(data); setError(""); }
+      const data = await api<Inspection>(port, force ? { operation: "refresh", port } : undefined);
+      if (mounted.current && ticket === sequence.current) { setInspection(data.device ? data : null); setError(data.refresh_error || (data.refreshing ? "A refresh is already in progress." : "")); }
     } catch (e) { if (mounted.current && ticket === sequence.current) setError((e as Error).message); }
   }, [api]);
 
@@ -70,13 +70,24 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     return () => clearTimeout(timer);
   }, [selected, inspect]);
   useEffect(() => {
+    let cancelled = false;
+    const timer = setInterval(async () => {
+      const ticket = sequence.current;
+      try {
+        const data = await api<Inspection>(selected);
+        if (!cancelled && ticket === sequence.current && data.device) setInspection(data);
+      } catch { /* Retain the last observed reading during transport failures. */ }
+    }, 5000);
+    return () => { cancelled = true; clearInterval(timer); };
+  }, [api, selected]);
+  useEffect(() => {
     const changed=()=>{const params=new URLSearchParams(window.location.search);setSelected(params.get('port')||'1/1/16');setView(params.get('view')||'rack');};
     window.addEventListener('popstate',changed);return()=>window.removeEventListener('popstate',changed);
   },[]);
   const previousActive = useRef(false);
   useEffect(() => {
     const running = snapshot?.operations.some(j => active(j.state)) || false;
-    if (previousActive.current && !running) queueMicrotask(() => { void inspect(selected); });
+    if (previousActive.current && !running) queueMicrotask(() => { void inspect(selected, true); });
     previousActive.current = running;
   }, [snapshot, selected, inspect]);
 
@@ -101,19 +112,19 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     finally { setBusy(false); }
   };
 
-  const stale = !snapshot || now - Date.parse(snapshot.collected_at) > 30000;
-  const selectedStale = !inspection || now - Date.parse(inspection.collected_at) > 30000;
+  const stale = !snapshot?.collected_at || snapshot.stale || now - Date.parse(snapshot.collected_at) > 900000;
+  const selectedStale = !inspection?.collected_at || inspection.stale || now - Date.parse(inspection.collected_at) > 900000;
   const running = snapshot?.operations.some(j => active(j.state));
   const protectedPort = inspection?.protected || snapshot?.ports.find(p => p.port === selected)?.protected;
   const disabled = busy || !!running || !!protectedPort || !!inspection?.device.locked || stale || selectedStale || !!error;
 
   return <main className="sl-app">
     <header className="sl-header">
-      <div><p className="sl-eyebrow">INFRASTRUCTURE / ARUBA</p><h1>Switch Manager <span className={stale || error ? "sl-badge sl-warning" : "sl-badge"}>{stale || error ? "Unavailable / stale" : "Live SSH"}</span></h1>
+      <div><p className="sl-eyebrow">INFRASTRUCTURE / ARUBA</p><h1>Switch Manager <span className={stale || error ? "sl-badge sl-warning" : "sl-badge"}>{stale || error ? "Unavailable / stale" : "Cached readings"}</span></h1>
         <p>52 ports. One place to inspect, understand, and control power.</p></div>
-      <button disabled={busy} onClick={() => { void refresh().catch(e => setError(e.message)); void inspect(selected); }}><RefreshCw size={16}/> Refresh switch</button>
+      <span className="sl-badge">Automatic refresh · 15 minutes</span>
     </header>
-    {error && <div role="alert" className="sl-alert">{error} No success is assumed. Refresh the switch before continuing.</div>}
+    {(error || snapshot?.refresh_error) && <div role="alert" className="sl-alert">{error || snapshot?.refresh_error} Last successful readings are retained. Use Refresh port to retry.</div>}
     <div className="sl-status"><span><ShieldCheck size={16}/> Server-side control · 192.168.40.2</span><span>Manager .41.106 / VLAN 41</span><span>{snapshot ? `Observed ${date(snapshot.collected_at)}` : "Connecting…"}</span></div>
     <nav className="sl-filters" aria-label="Infrastructure views">{['rack','fleet','network','activity'].map(item=><button key={item} aria-pressed={view===item} onClick={()=>{setView(item);const url=new URL(location.href);url.searchParams.set('view',item);history.pushState({},'',url);}}>{item[0].toUpperCase()+item.slice(1)}</button>)}</nav>
     {fleetError&&<p role="status" className="sl-warning">{fleetError}</p>}
@@ -129,8 +140,11 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
         <div className="sl-boundary"><ShieldCheck size={20}/><div><strong>Single port operations</strong><p>Management host 13, provisioning host 48, router uplink 1 and SFP ports are protected. VLAN and provisioning changes remain outside live power control.</p></div></div>
       </section>}
       <aside className="sl-inspector" aria-label="Port inspector">
-        <div className="sl-section-heading"><div><p className="sl-eyebrow">PORT INSPECTOR</p><h2>{selected}</h2></div><span className="sl-badge">{inspection?.link || "Refreshing"}</span></div>
+        <div className="sl-section-heading"><div><p className="sl-eyebrow">PORT INSPECTOR</p><h2>{selected}</h2></div><span className="sl-badge">{inspection?.link || "Unknown"}</span></div>
+        <button disabled={busy} onClick={async () => { setBusy(true); try { await inspect(selected, true); await refresh(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }}><RefreshCw size={16}/> {busy ? "Refreshing…" : "Refresh port"}</button>
         {inspection ? <>
+          <p className="sl-hint">Cached switch readings · refreshed every 15 minutes</p>
+          {inspection.refresh_error && <p role="status" className="sl-warning">{inspection.refresh_error}</p>}
           <h3>{inspection.device.label}</h3><p>{inspection.device.workload}</p>
           <div className={`sl-identity ${inspection.device.quality !== "verified" ? "sl-warning" : ""}`}><strong>Identity: {inspection.device.quality}{selectedStale ? " · observation stale" : ""}</strong>
             <p>{inspection.device.quality === "verified" ? "Learned MAC matches recorded inventory." : "Attached device or workload is unconfirmed. Review the physical port before removing power."}</p></div>
@@ -144,7 +158,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
             <button disabled={disabled || inspection.poe_status !== "delivering"} onClick={() => void prepare("cycle")}><RotateCw size={15}/> Cycle · 10s</button></div>
           <p className="sl-hint">Each action opens a fresh preview. The worker checks the port again immediately before execution.</p>
           <details><summary>Read-only command evidence</summary>{Object.entries(inspection.evidence).map(([k, v]) => <pre key={k}>{v}</pre>)}</details>
-        </> : <p>Reading interface, MAC table and PoE telemetry…</p>}
+        </> : <p>No cached port reading yet. Select Refresh port or wait for the background collector.</p>}
       </aside>
     </div>
     <section ref={operations} className="sl-operations" aria-label="Operations Tray">
