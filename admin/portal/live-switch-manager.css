@@ -13,3 +13,5 @@
 [data-sm-theme="light"] .sl-fleet{background:#fff;color:#17212e}[data-sm-theme="light"] .sl-filters input,[data-sm-theme="light"] .sl-filters select,[data-sm-theme="light"] .sl-fleet select{background:#f1f5f9;color:#17212e}
 
 .sl-app select:focus-visible{outline:2px solid var(--sl-accent);outline-offset:3px}.sl-app nav button[aria-pressed="true"]{background:var(--sl-accent);color:var(--sl-bg)}
+
+.sl-app .sl-resource-link{display:inline-block;margin:6px 6px 6px 0;padding:9px 12px;border-radius:7px;background:var(--sl-panel);color:var(--sl-accent);border:1px solid var(--sl-line);text-decoration:underline;font-size:13px}.sl-app .sl-resource-link:focus-visible{outline:2px solid var(--sl-accent);outline-offset:3px}

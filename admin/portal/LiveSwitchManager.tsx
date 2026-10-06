@@ -1,18 +1,18 @@
 "use client";
 
-import { ClusterFleet, ClusterNetwork, useFleet } from "./ClusterFleet";
+import { ClusterFleet, ClusterNetwork, useFleet, type ResourceLink } from "./ClusterFleet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Cable, CheckCircle2, ChevronRight, Clock3, LockKeyhole, Power, RefreshCw, RotateCw, ShieldCheck, Zap } from "lucide-react";
 
 type Device = { label: string; workload: string; expected_mac: string; quality: string; locked: boolean };
 type Port = { port: string; vlan: number; mode: string; link: string; protected: string };
-type Inspection = { port: string; link: string; access_vlan: number | null; macs: string[]; poe_enabled: boolean | null;
+type Inspection = { resources?: ResourceLink[]; port: string; link: string; access_vlan: number | null; macs: string[]; poe_enabled: boolean | null;
   poe_status: string | null; watts: number | null; volts: number | null; amps: number | null; fault: string | null;
   collected_at: string; stale?: boolean; refresh_error?: string; refreshing?: boolean; device: Device; protected: string; evidence: Record<string, string> };
 type Operation = { id: string; port: string; action: string; state: string; actor: string; source: string; created_at: string;
   preview: { device: Device; macs: string[]; access_vlan: number | null; interruption: string; collected_at: string };
   result: string; evidence: { stage: string; at: string; port?: Inspection; message: string }[] };
-type Snapshot = { stale?: boolean; refresh_error?: string; host: string; collected_at: string; ports: Port[]; operations: Operation[] };
+type Snapshot = { resources?: ResourceLink[]; stale?: boolean; refresh_error?: string; host: string; collected_at: string; ports: Port[]; operations: Operation[] };
 
 const date = (v: string) => v ? new Date(v).toLocaleTimeString() : "Not collected";
 const active = (s: string) => ["queued", "running", "recovery"].includes(s);
@@ -124,6 +124,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
         <p>52 ports. One place to inspect, understand, and control power.</p></div>
       <span className="sl-badge">Automatic refresh · 15 minutes</span>
     </header>
+    {snapshot?.resources?.length ? <nav aria-label="Infrastructure resources">{snapshot.resources.map(resource=><a key={resource.id} className="sl-resource-link" href={resource.url}>{resource.name}</a>)}</nav> : null}
     {(error || snapshot?.refresh_error) && <div role="alert" className="sl-alert">{error || snapshot?.refresh_error} Last successful readings are retained. Use Refresh port to retry.</div>}
     <div className="sl-status"><span><ShieldCheck size={16}/> Server-side control · 192.168.40.2</span><span>Manager .41.106 / VLAN 41</span><span>{snapshot ? `Observed ${date(snapshot.collected_at)}` : "Connecting…"}</span></div>
     <nav className="sl-filters" aria-label="Infrastructure views">{['rack','fleet','network','activity'].map(item=><button key={item} aria-pressed={view===item} onClick={()=>{setView(item);const url=new URL(location.href);url.searchParams.set('view',item);history.pushState({},'',url);}}>{item[0].toUpperCase()+item.slice(1)}</button>)}</nav>
@@ -142,6 +143,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
       <aside className="sl-inspector" aria-label="Port inspector">
         <div className="sl-section-heading"><div><p className="sl-eyebrow">PORT INSPECTOR</p><h2>{selected}</h2></div><span className="sl-badge">{inspection?.link || "Unknown"}</span></div>
         <button disabled={busy} onClick={async () => { setBusy(true); try { await inspect(selected, true); await refresh(); } catch (e) { setError((e as Error).message); } finally { setBusy(false); } }}><RefreshCw size={16}/> {busy ? "Refreshing…" : "Refresh port"}</button>
+        {inspection?.resources?.map(resource=><p key={resource.id}><a className="sl-resource-link" href={resource.url}>Open resource · {resource.name}</a></p>)}
         {inspection ? <>
           <p className="sl-hint">Cached switch readings · refreshed every 15 minutes</p>
           {inspection.refresh_error && <p role="status" className="sl-warning">{inspection.refresh_error}</p>}

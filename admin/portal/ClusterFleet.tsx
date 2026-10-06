@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react';
 type NetworkNote = {name:string;subnet_gateway:string;purpose:string};
 type NetworkSource = {source:string;collected_at:string|null;source_updated_at?:string|null};
 type Observation = {source:string;collected_at:string|null;error?:string;source_updated_at?:string};
-export type FleetDevice = {id:string;serial:string;port:string;inventory:Record<string,string>;facts:Record<string,unknown>;status:string;conflict:boolean;stale:boolean;nvme_detected:boolean;nvme_bytes:number;sd_bytes:number;ram_gb:number|null;assigned:boolean;available:boolean;admitted:boolean;observations:Observation[]};
+export type ResourceLink = {id:string;name:string;url:string;state:string};
+export type FleetDevice = {resource?:ResourceLink|null;resource_sync?:string;id:string;serial:string;port:string;inventory:Record<string,string>;facts:Record<string,unknown>;status:string;conflict:boolean;stale:boolean;nvme_detected:boolean;nvme_bytes:number;sd_bytes:number;ram_gb:number|null;assigned:boolean;available:boolean;admitted:boolean;observations:Observation[]};
 export function useFleet(endpoint:string) {
   const [devices,setDevices]=useState<FleetDevice[]>([]),[error,setError]=useState('');
   const [networks,setNetworks]=useState<NetworkNote[]>([]),[networkSource,setNetworkSource]=useState<NetworkSource|null>(null);
@@ -30,7 +31,7 @@ export function ClusterFleet({devices,selected,choose}:{devices:FleetDevice[];se
       <label><input type="checkbox" checked={spare} onChange={e=>setSpare(e.target.checked)}/>Available spares</label></div>
     <p>{filtered.length} devices · nominal RAM class estimated from observed usable memory</p>
     <div className="sl-table-scroll"><table><thead><tr><th>Device / identity</th><th>Purpose</th><th>RAM / SD</th><th>NVMe</th><th>Evidence</th></tr></thead><tbody>{filtered.map(device=><tr key={device.id} aria-selected={selected===device.port}>
-      <td><button onClick={()=>choose(device.port)}>{device.inventory.title} · {device.port}</button><br/><code>{device.serial||'Serial unknown'}</code></td>
+      <td><button onClick={()=>choose(device.port)}>{device.inventory.title} · {device.port}</button><br/><code>{device.serial||'Serial unknown'}</code>{device.resource&&<p><a className="sl-resource-link" href={device.resource.url}>Open resource · notes &amp; tasks</a></p>}{device.resource_sync&&<small>{device.resource_sync}</small>}</td>
       <td>{device.inventory.role||'Purpose unconfirmed'}<br/>{device.assigned?'Active assignment':device.available?'Available spare':'Availability unconfirmed'}</td>
       <td>{device.ram_gb?`${device.ram_gb} GB`:'Unknown'} / {capacity(device.sd_bytes)}</td>
       <td>{device.nvme_detected?`Drive detected · ${capacity(device.nvme_bytes)}`:device.facts.storage?'No drive detected':'Not observed'}<br/>{device.facts.nvme_hat?`HAT: ${String(device.facts.nvme_hat)}`:'HAT not reported'}</td>
