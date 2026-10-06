@@ -1,5 +1,6 @@
 "use client";
 
+import { ClusterFleet, ClusterNetwork, useFleet } from "./ClusterFleet";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Cable, CheckCircle2, ChevronRight, Clock3, LockKeyhole, Power, RefreshCw, RotateCw, ShieldCheck, Zap } from "lucide-react";
 
@@ -17,6 +18,8 @@ const date = (v: string) => new Date(v).toLocaleTimeString();
 const active = (s: string) => ["queued", "running", "recovery"].includes(s);
 
 export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string; csrf: string }) {
+  const {devices, error: fleetError} = useFleet(endpoint);
+  const [view,setView] = useState(() => new URLSearchParams(window.location.search).get('view') || 'rack');
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [selected, setSelected] = useState(() => new URLSearchParams(window.location.search).get("port") || "1/1/16");
   const [inspection, setInspection] = useState<Inspection | null>(null);
@@ -26,6 +29,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
   const [tray, setTray] = useState(true);
   const [accepted, setAccepted] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const operations = useRef<HTMLElement>(null);
   const sequence = useRef(0);
   const mounted = useRef(true);
 
@@ -65,6 +69,10 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     const timer = setTimeout(() => { void inspect(selected); }, 0);
     return () => clearTimeout(timer);
   }, [selected, inspect]);
+  useEffect(() => {
+    const changed=()=>{const params=new URLSearchParams(window.location.search);setSelected(params.get('port')||'1/1/16');setView(params.get('view')||'rack');};
+    window.addEventListener('popstate',changed);return()=>window.removeEventListener('popstate',changed);
+  },[]);
   const previousActive = useRef(false);
   useEffect(() => {
     const running = snapshot?.operations.some(j => active(j.state)) || false;
@@ -87,7 +95,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     if (!preview || !accepted) return;
     setBusy(true); setError("");
     try {
-      await api<Operation>(undefined, { operation: "execute", id: preview.id });
+      await api<Operation>(undefined, { operation: preview.source === "Alshival" ? "approve" : "execute", id: preview.id });
       setPreview(null); setAccepted(false); await refresh();
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
@@ -107,7 +115,10 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     </header>
     {error && <div role="alert" className="sl-alert">{error} No success is assumed. Refresh the switch before continuing.</div>}
     <div className="sl-status"><span><ShieldCheck size={16}/> Server-side control · 192.168.40.2</span><span>Manager .41.106 / VLAN 41</span><span>{snapshot ? `Observed ${date(snapshot.collected_at)}` : "Connecting…"}</span></div>
+    <nav className="sl-filters" aria-label="Infrastructure views">{['rack','fleet','network','activity'].map(item=><button key={item} aria-pressed={view===item} onClick={()=>{setView(item);const url=new URL(location.href);url.searchParams.set('view',item);history.pushState({},'',url);}}>{item[0].toUpperCase()+item.slice(1)}</button>)}</nav>
+    {fleetError&&<p role="status" className="sl-warning">{fleetError}</p>}
     <div className="sl-layout">
+      {view==='fleet' ? <ClusterFleet devices={devices} selected={selected} choose={choose}/> : view==='network' ? <ClusterNetwork ports={snapshot?.ports||[]} devices={devices} choose={choose}/> : view==='activity' ? <section className="sl-fleet"><h2>Activity</h2><p>Human and Alshival power operations share the audit history below.</p><p>{snapshot?.operations.filter(job=>job.state!=="preview").length || 0} recorded operations</p><button onClick={()=>{setTray(true);operations.current?.scrollIntoView({block:"start"});}}>View operation history</button></section> :
       <section className="sl-rack" aria-label="Live switch ports">
         <div className="sl-rack-title"><div><p className="sl-eyebrow">ARUBA 6200F</p><h2>The physical switch</h2></div><Cable size={28}/></div>
         <div className="sl-port-grid">{(snapshot?.ports || []).map(p => <button key={p.port} aria-label={`Port ${p.port}, ${p.link}, VLAN ${p.vlan}${p.protected ? ", protected" : ""}`} aria-pressed={selected === p.port}
@@ -116,7 +127,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
           {p.protected && <LockKeyhole size={11} className="sl-lock"/>}</button>)}</div>
         <div className="sl-legend"><span><i/> Link up</span><span>Dark jack · link down</span><span><LockKeyhole size={12}/> Protected</span></div>
         <div className="sl-boundary"><ShieldCheck size={20}/><div><strong>Single port operations</strong><p>Management host 13, provisioning host 48, router uplink 1 and SFP ports are protected. VLAN and provisioning changes remain outside live power control.</p></div></div>
-      </section>
+      </section>}
       <aside className="sl-inspector" aria-label="Port inspector">
         <div className="sl-section-heading"><div><p className="sl-eyebrow">PORT INSPECTOR</p><h2>{selected}</h2></div><span className="sl-badge">{inspection?.link || "Refreshing"}</span></div>
         {inspection ? <>
@@ -136,9 +147,10 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
         </> : <p>Reading interface, MAC table and PoE telemetry…</p>}
       </aside>
     </div>
-    <section className="sl-operations" aria-label="Operations Tray">
+    <section ref={operations} className="sl-operations" aria-label="Operations Tray">
       <button className="sl-tray-toggle" onClick={() => setTray(!tray)} aria-expanded={tray}><Clock3 size={18}/><strong>Operations Tray</strong><span>{running ? "Operation in progress" : "Review & audit"}</span><ChevronRight size={16}/></button>
       {tray && <div className="sl-tray-body">
+        {snapshot?.operations.filter(job => job.state === 'preview' && job.source === 'Alshival').map(job => <article key={job.id} className="sl-job"><h3>Alshival proposed PoE {job.action} / {job.port}</h3><p>{job.preview.device.label} · awaiting your review</p><button disabled={busy} onClick={() => { setPreview(job); setAccepted(false); }}>Review exact plan</button></article>)}
         {preview && <article className="sl-preview"><p className="sl-eyebrow">REVIEW BEFORE EXECUTION</p><h3>PoE {preview.action} / {preview.port}</h3><p><strong>{preview.preview.device.label}</strong> · {preview.preview.device.workload}</p>
           <p className={preview.preview.device.quality !== "verified" ? "sl-warning" : ""}>Identity {preview.preview.device.quality} · MAC {preview.preview.macs.join(", ") || "unknown"} · VLAN {preview.preview.access_vlan}</p>
           <p>{preview.preview.interruption}</p><small>Fresh observation {date(preview.preview.collected_at)} · preview expires after 2 minutes</small>
