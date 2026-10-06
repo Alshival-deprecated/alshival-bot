@@ -18,7 +18,7 @@ const date = (v: string) => new Date(v).toLocaleTimeString();
 const active = (s: string) => ["queued", "running", "recovery"].includes(s);
 
 export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string; csrf: string }) {
-  const {devices, error: fleetError} = useFleet(endpoint);
+  const {devices, error: fleetError, networks, networkSource} = useFleet(endpoint);
   const [view,setView] = useState(() => new URLSearchParams(window.location.search).get('view') || 'rack');
   const [snapshot, setSnapshot] = useState<Snapshot | null>(null);
   const [selected, setSelected] = useState(() => new URLSearchParams(window.location.search).get("port") || "1/1/16");
@@ -118,7 +118,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     <nav className="sl-filters" aria-label="Infrastructure views">{['rack','fleet','network','activity'].map(item=><button key={item} aria-pressed={view===item} onClick={()=>{setView(item);const url=new URL(location.href);url.searchParams.set('view',item);history.pushState({},'',url);}}>{item[0].toUpperCase()+item.slice(1)}</button>)}</nav>
     {fleetError&&<p role="status" className="sl-warning">{fleetError}</p>}
     <div className="sl-layout">
-      {view==='fleet' ? <ClusterFleet devices={devices} selected={selected} choose={choose}/> : view==='network' ? <ClusterNetwork ports={snapshot?.ports||[]} devices={devices} choose={choose}/> : view==='activity' ? <section className="sl-fleet"><h2>Activity</h2><p>Human and Alshival power operations share the audit history below.</p><p>{snapshot?.operations.filter(job=>job.state!=="preview").length || 0} recorded operations</p><button onClick={()=>{setTray(true);operations.current?.scrollIntoView({block:"start"});}}>View operation history</button></section> :
+      {view==='fleet' ? <ClusterFleet devices={devices} selected={selected} choose={choose}/> : view==='network' ? <ClusterNetwork ports={snapshot?.ports||[]} devices={devices} choose={choose} networks={networks} networkSource={networkSource}/> : view==='activity' ? <section className="sl-fleet"><h2>Activity</h2><p>Human and Alshival power operations share the audit history below.</p><p>{snapshot?.operations.filter(job=>job.state!=="preview").length || 0} recorded operations</p><button onClick={()=>{setTray(true);operations.current?.scrollIntoView({block:"start"});}}>View operation history</button></section> :
       <section className="sl-rack" aria-label="Live switch ports">
         <div className="sl-rack-title"><div><p className="sl-eyebrow">ARUBA 6200F</p><h2>The physical switch</h2></div><Cable size={28}/></div>
         <div className="sl-port-grid">{(snapshot?.ports || []).map(p => <button key={p.port} aria-label={`Port ${p.port}, ${p.link}, VLAN ${p.vlan}${p.protected ? ", protected" : ""}`} aria-pressed={selected === p.port}
