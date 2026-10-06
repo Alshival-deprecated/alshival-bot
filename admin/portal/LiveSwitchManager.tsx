@@ -42,7 +42,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
 
   const refresh = useCallback(async () => {
     const data = await api<Snapshot>();
-    if (mounted.current) { setSnapshot(data); setError(""); }
+    if (mounted.current) { setSnapshot(data); }
   }, [api]);
 
   const inspect = useCallback(async (port: string) => {
@@ -50,7 +50,7 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     setInspection(null); setPreview(null); setAccepted(false);
     try {
       const data = await api<Inspection>(port);
-      if (mounted.current && ticket === sequence.current) setInspection(data);
+      if (mounted.current && ticket === sequence.current) { setInspection(data); setError(""); }
     } catch (e) { if (mounted.current && ticket === sequence.current) setError((e as Error).message); }
   }, [api]);
 
