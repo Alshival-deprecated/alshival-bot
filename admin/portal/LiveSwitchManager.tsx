@@ -120,6 +120,14 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
   const protectedPort = inspection?.protected || snapshot?.ports.find(p => p.port === selected)?.protected;
   const disabled = busy || !!running || !!protectedPort || !!inspection?.device.locked || stale || selectedStale || !!error;
 
+  const orderedPorts = [...(snapshot?.ports || [])].sort((a, b) => Number(a.port.split("/")[2]) - Number(b.port.split("/")[2]));
+  const ethernetPorts = orderedPorts.filter(p => Number(p.port.split("/")[2]) <= 48);
+  const sfpPorts = orderedPorts.filter(p => Number(p.port.split("/")[2]) > 48);
+  const renderPort = (p: Port) => <button key={p.port} aria-label={`Port ${p.port}, ${p.link}, VLAN ${p.vlan}${p.protected ? ", protected" : ""}`} aria-pressed={selected === p.port}
+          className={`sl-port ${p.link === "up" ? "sl-up" : ""} ${selected === p.port ? "sl-selected" : ""}`} onClick={() => choose(p.port)}>
+          <span className="sl-port-jack"><i/><i/><i/><i/></span><strong>{p.port.split("/")[2]}</strong><small>{p.mode === "access" ? `V${p.vlan}` : "TRUNK"}</small><small>{p.link === "up" ? "Up" : p.link === "down" ? "Down" : "Unknown"}</small>
+          {p.protected && <LockKeyhole size={11} className="sl-lock"/>}</button>;
+
   return <main className="sl-app">
     <header className="sl-header">
       <div><p className="sl-eyebrow">INFRASTRUCTURE / ARUBA</p><h1>Switch Manager <span className={stale || error ? "sl-badge sl-warning" : "sl-badge"}>{stale || error ? "Unavailable / stale" : "Cached readings"}</span></h1>
@@ -131,14 +139,15 @@ export default function LiveSwitchManager({ endpoint, csrf }: { endpoint: string
     <div className="sl-status"><span><ShieldCheck size={16}/> Switch · {snapshot?.host || "Not observed"}</span><span>{snapshot?.ports.length ?? "—"} ports · {devices.length} recorded devices</span><span>{snapshot ? `Observed ${date(snapshot.collected_at)}` : "Connecting…"}</span></div>
     <nav className="sl-filters" aria-label="Infrastructure views">{['rack','fleet','network','activity'].map(item=><button key={item} aria-pressed={view===item} onClick={()=>{setView(item);const url=new URL(location.href);url.searchParams.set('view',item);history.pushState({},'',url);}}>{item[0].toUpperCase()+item.slice(1)}</button>)}</nav>
     {fleetError&&<p role="status" className="sl-warning">{fleetError}</p>}
-    <div className="sl-layout">
+    <div className={`sl-layout ${view === "rack" ? "sl-layout-rack" : ""}`}>
       {view==='fleet' ? <ClusterFleet devices={devices} selected={selected} choose={choose}/> : view==='network' ? <ClusterNetwork ports={snapshot?.ports||[]} devices={devices} choose={choose} networks={networks} networkSource={networkSource}/> : view==='activity' ? <section className="sl-fleet"><h2>Activity</h2><p>Human and Alshival power operations share the audit history below.</p><p>{snapshot?.operations.filter(job=>job.state!=="preview").length || 0} recorded operations</p><button onClick={()=>{setTray(true);operations.current?.scrollIntoView({block:"start"});}}>View operation history</button></section> :
       <section className="sl-rack" aria-label="Live switch ports">
         <div className="sl-rack-title"><div><p className="sl-eyebrow">ARUBA 6200F</p><h2>The physical switch</h2></div><Cable size={28}/></div>
-        <div className="sl-port-grid">{(snapshot?.ports || []).map(p => <button key={p.port} aria-label={`Port ${p.port}, ${p.link}, VLAN ${p.vlan}${p.protected ? ", protected" : ""}`} aria-pressed={selected === p.port}
-          className={`sl-port ${p.link === "up" ? "sl-up" : ""} ${selected === p.port ? "sl-selected" : ""}`} onClick={() => choose(p.port)}>
-          <span className="sl-port-jack"><i/><i/><i/><i/></span><strong>{p.port.split("/")[2]}</strong><small>{p.mode === "access" ? `V${p.vlan}` : "TRUNK"}</small><small>{p.link === "up" ? "Up" : p.link === "down" ? "Down" : "Unknown"}</small>
-          {p.protected && <LockKeyhole size={11} className="sl-lock"/>}</button>)}</div>
+        <p className="sl-hint">48 Ethernet ports · odd numbers above even numbers. Scroll horizontally on smaller screens.</p>
+        <div className="sl-port-scroll" role="region" aria-label="48 Ethernet ports" tabIndex={0}>
+          <div className="sl-port-grid">{ethernetPorts.map(renderPort)}</div>
+        </div>
+        {sfpPorts.length > 0 && <div className="sl-sfp"><p className="sl-eyebrow">SFP UPLINKS</p><div className="sl-sfp-grid">{sfpPorts.map(renderPort)}</div></div>}
         <div className="sl-legend"><span><i/> Link up</span><span>Up / Down · observed link</span><span><LockKeyhole size={12}/> Protected</span></div>
         <div className="sl-boundary"><ShieldCheck size={20}/><div><strong>Single port operations</strong><p>Management host 13, provisioning host 48, router uplink 1 and SFP ports are protected. VLAN and provisioning changes remain outside live power control.</p></div></div>
       </section>}
