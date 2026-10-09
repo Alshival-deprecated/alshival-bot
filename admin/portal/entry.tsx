@@ -3,6 +3,7 @@ import SwitchManager from "../app/(admin)/infrastructure/switch-manager/SwitchMa
 import LiveSwitchManager from "./LiveSwitchManager";
 import liveCss from "./live-switch-manager.css";
 import liveSpectrum from "./live-switch-spectrum.css";
+import liveWorkspace from "./live-switch-workspace.css";
 import css from "../app/(admin)/infrastructure/switch-manager/switch-manager.css";
 
 import appearance from "../app/(admin)/infrastructure/switch-manager/appearance.css";
@@ -15,7 +16,7 @@ if (host) {
   style.textContent = `:host { display:block; min-width:0; }
     *, *::before, *::after { box-sizing:border-box; }
     button,input,select,textarea { font:inherit; }
-    ${host.dataset.liveControl ? liveCss + liveSpectrum : css + appearance}
+    ${host.dataset.liveControl ? liveCss + liveSpectrum + liveWorkspace : css + appearance}
     .sm-ops-dock, .sm-operations { left:var(--switch-portal-offset, 0px) !important; }
   `;
   const mount = document.createElement("div");

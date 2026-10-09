@@ -1,0 +1,64 @@
+/* One switch, one directory and one shared inspector. */
+.sl-app .sl-compact-rack { margin-top: 12px; padding: 20px; }
+.sl-compact-rack .sl-rack-title { margin-bottom: 8px; }
+.sl-compact-rack .sl-rack-title > svg { padding: 8px; }
+.sl-compact-rack .sl-port-grid { padding: 10px; gap: 5px; }
+.sl-app .sl-compact-rack .sl-port { padding-block: 6px; gap: 3px; }
+.sl-compact-rack .sl-port-jack { height: 20px; }
+.sl-compact-rack .sl-sfp { padding-top: 6px; margin-top: 6px; }
+.sl-compact-rack .sl-legend { margin-top: 10px; }
+.sl-app .sl-filter-muted { opacity: .4; }
+.sl-app .sl-filter-muted:hover, .sl-app .sl-filter-muted:focus-visible, .sl-app .sl-filter-muted.sl-selected { opacity: 1; }
+.sl-vlan-overview { border-top: 1px solid var(--sl-line); padding-top: 8px; }
+.sl-network-inline h2 { font-size: 16px; }
+.sl-network-inline svg { width: 100%; max-height: 400px; margin-block: 12px; }
+.sl-network-inline > label { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.sl-workspace { display: grid; grid-template-columns: minmax(0, 1fr) 380px; gap: 20px; align-items: start; margin-top: 20px; }
+.sl-workspace .sl-directory { padding: 20px; }
+.sl-directory-filters { margin-bottom: 20px; }
+.sl-search-line { display: flex; flex-wrap: wrap; gap: 12px; align-items: end; }
+.sl-search-line label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; min-width: 0; flex: 1 1 100px; }
+.sl-search-line label:first-child { flex: 3 1 190px; }
+.sl-search-line :is(input, select) { width: 100%; min-width: 0; }
+.sl-search-line label.sl-check { flex-direction: row; align-items: center; align-self: center; flex: 0 1 auto; }
+.sl-search-line .sl-check input { width: auto; }
+.sl-directory .sl-more-filters { margin-top: 8px; }
+.sl-directory .sl-clear-filters { margin-top: 8px; background: var(--sl-soft); color: var(--sl-ink); border-color: var(--sl-line); }
+.sl-device-list { display: grid; gap: 8px; }
+.sl-app .sl-device-row {
+  display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(70px, .7fr) minmax(0, 1.2fr) minmax(90px, .8fr);
+  width: 100%; padding: 16px; gap: 12px; text-align: left;
+  background: var(--sl-panel); color: var(--sl-ink); border: 1px solid var(--sl-line); font-weight: 400;
+}
+.sl-device-row > span { min-width: 0; }
+.sl-device-row :is(strong, small) { display: block; overflow-wrap: anywhere; }
+.sl-device-row strong { font-size: 12px; line-height: 1.6; }
+.sl-device-row small { font-size: 11px; line-height: 1.6; color: var(--sl-muted); margin-top: 3px; }
+.sl-device-row .sl-address { font-family: var(--mono, monospace); font-weight: 500; }
+.sl-app .sl-device-row:hover { background: var(--sl-soft); }
+.sl-app .sl-device-row.is-selected { background: var(--sl-lift); border-color: var(--sl-accent); box-shadow: inset 3px 0 var(--sl-accent); }
+.sl-app .sl-details-panel { color: var(--sl-ink); width: 100%; max-width: none; margin: 0; position: sticky; top: 16px; max-height: calc(100dvh - 100px); overflow: auto; overscroll-behavior: contain; }
+.sl-app dialog.sl-details-panel:not([open]) { display: none; }
+.sl-details-panel::backdrop { background: #0008; backdrop-filter: blur(3px); }
+.sl-app .sl-close-details { display: block; margin: 0 0 20px auto; }
+.sl-details-panel > .sl-section-heading { margin-top: 8px; }
+.sl-inventory-detail { margin-block: 16px; padding-block: 12px; border-block: 1px solid var(--sl-line); }
+.sl-inventory-detail > code { display: block; font-size: 11px; color: var(--sl-muted); }
+.sl-empty { padding: 28px 12px; color: var(--sl-muted); }
+.sl-empty svg { color: var(--sl-accent); margin-bottom: 12px; }
+.sl-empty h2 { font: 600 18px/1.5 'Public Sans', system-ui, sans-serif; }
+.sl-operations { scroll-margin-top: 20px; }
+.sl-app .sl-operations:focus { outline: 3px solid var(--sl-accent); outline-offset: 3px; }
+@media (min-width: 1200px) and (max-width: 1500px) {
+  .sl-app .sl-device-row { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+}
+@media (max-width: 1199px) {
+  .sl-workspace { grid-template-columns: minmax(0, 1fr); }
+  .sl-app dialog.sl-details-panel[open] { position: fixed; inset: auto 0 0; width: 100%; max-height: 90dvh; margin: 0; border-radius: 20px 20px 0 0; padding-bottom: max(24px, env(safe-area-inset-bottom)); z-index: 10; }
+}
+@media (max-width: 650px) {
+  .sl-app .sl-compact-rack, .sl-workspace .sl-directory { padding: 16px; }
+  .sl-app .sl-device-row { grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 12px; padding: 12px; }
+  .sl-search-line label:first-child { flex-basis: 100%; }
+  .sl-compact-rack .sl-rack-title h2 { font-size: 19px; }
+}
