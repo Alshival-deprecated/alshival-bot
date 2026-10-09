@@ -7,6 +7,18 @@ export type DeviceRow = { key: string; port?: SwitchPort; device?: FleetDevice; 
 export const validPort = (value: string | null | undefined): value is string => /^1\/1\/([1-9]|[1-4][0-9]|5[0-2])$/.test(value || '');
 export const portNumber = (port?: string) => validPort(port) ? Number(port.split('/')[2]) : 999;
 
+export function addressSummary(context?: FleetDevice['network_context']) {
+  const addresses = context?.addresses.filter(row => row.scope === 'local') || [];
+  const score = (row: typeof addresses[number]) => {
+    const linkLocal = /^(fe80:|169\.254\.|127\.|::1(?:\/|$))/i.test(row.address);
+    const virtual = /^(docker|br-|veth|virbr|lo$)/.test(row.interface);
+    const routed = context?.gateways.some(gateway => gateway.interface === row.interface);
+    return (linkLocal ? 0 : 100) + (virtual ? 0 : 20) + (routed ? 10 : 0) + (row.address.includes(':') ? 0 : 1);
+  };
+  const primary = [...addresses].sort((a, b) => score(b) - score(a))[0];
+  return { primary: primary?.address, additional: Math.max(0, addresses.length - 1) };
+}
+
 export function deviceRows(ports: SwitchPort[], devices: FleetDevice[]): DeviceRow[] {
   const rows = ports.flatMap<DeviceRow>(port => {
     const attached = devices.filter(device => device.port === port.port);
@@ -57,13 +69,13 @@ export function DeviceDirectory({ rows, selected, selectedDevice, choose }: { ro
   return <div className="sl-device-list" role="list" aria-label="Devices and ports">
     {rows.map(({ key, port, device, ambiguous }) => {
       const context = device?.network_context;
-      const observed = context?.addresses.filter(row => row.scope === 'local') || [];
+      const address = addressSummary(context);
       const conflict = !!(device?.conflict || context?.identity_conflict);
       const selectedRow = port ? selected === port.port : selectedDevice === device?.id;
       return <div role="listitem" key={key}><button aria-pressed={selectedRow} className={`sl-device-row ${selectedRow ? 'is-selected' : ''}`} onClick={() => choose(port?.port || '', device?.id)} aria-label={`Inspect ${device?.inventory.title || (port?.link === 'up' ? 'Unidentified device' : 'Unused port')}${port ? ` on ${port.port}` : ', unassigned'}`}>
         <span className="sl-device-identity"><strong>{device?.inventory.title || (port?.link === 'up' ? 'Unidentified device' : 'Unused port')}</strong><small>{!conflict && (context?.hostname || device?.inventory.hostname) || device?.inventory.role || 'Identity not confirmed'}</small>{(ambiguous || conflict) && <small className="sl-warning">{ambiguous ? 'Multiple inventory records' : 'Identity conflict'}</small>}</span>
-        <span><strong>{port?.port || 'Unassigned'}</strong><small>{port ? `VLAN ${port.vlan ?? 'unknown'} · ${port.link}` : 'No observed port'}</small></span>
-        <span><strong className="sl-address">{conflict ? 'Address withheld' : observed.length ? observed.map(row => row.address).join(', ') : device?.inventory.internal_ip || 'IP unknown'}</strong><small>{conflict ? 'Verify device identity' : observed.length ? (context?.stale ? 'Observed · stale' : 'Observed address') : device?.inventory.internal_ip ? 'Documented · unverified' : 'Not observed'}</small></span>
+        <span><strong>{port?.port || 'Unassigned'}</strong><small>{port ? `${port.mode === 'trunk' ? 'Trunk' : `VLAN ${port.vlan ?? 'unknown'}`} · ${port.link}` : 'No observed port'}</small></span>
+        <span><strong className="sl-address">{conflict ? 'Address withheld' : address.primary || device?.inventory.internal_ip || 'IP unknown'}</strong><small>{conflict ? 'Verify device identity' : address.primary ? `${context?.stale ? 'Observed · stale' : 'Observed address'}${address.additional ? ` · +${address.additional} more` : ''}` : device?.inventory.internal_ip ? 'Documented · unverified' : 'Not observed'}</small></span>
         <span><strong>{device?.ram_gb ? `${device.ram_gb} GB RAM` : 'Capacity unknown'}</strong><small>{device?.nvme_detected ? `${(device.nvme_bytes / 1e9).toFixed(0)} GB NVMe` : device?.sd_bytes ? `${(device.sd_bytes / 1e9).toFixed(0)} GB SD` : 'No storage evidence'}{device?.stale ? ' · stale' : ''}</small></span>
       </button></div>;
     })}
